@@ -18,31 +18,37 @@ public class PicToConsole {
     private static final int DEFAULT_VALUE = 50;
 
     PicToConsole(int consoleResolution, String url) throws IOException {
-        if (consoleResolution >= LOWER_BOUND && consoleResolution <= UPPER_BOUND) {
-            this.consoleResolution = consoleResolution;
-        } else this.consoleResolution = DEFAULT_VALUE;
-
-        bufferedImage = ImageIO.read(URI.create(url).toURL());
-        if (consoleResolution > bufferedImage.getWidth() || consoleResolution > bufferedImage.getHeight()) {
-            throw new IllegalArgumentException();
-        }
-
+        this.consoleResolution = validateResolution(consoleResolution);
+        this.bufferedImage = ImageIO.read(URI.create(url).toURL());
+        validateImageBounds();
         this.convertImage();
     }
 
     PicToConsole(int consoleResolution, File path) throws IOException {
-        if (consoleResolution >= LOWER_BOUND && consoleResolution <= UPPER_BOUND) {
-            this.consoleResolution = consoleResolution;
-        } else this.consoleResolution = DEFAULT_VALUE;
+        if (!path.exists() || !path.isFile())
+            throw new NoSuchFileException(path.toString());
 
-        if (!path.exists() || !path.isFile()) throw new NoSuchFileException(path.toString());
-
-        bufferedImage = ImageIO.read(path);
-        if (consoleResolution > bufferedImage.getWidth() || consoleResolution > bufferedImage.getHeight()) {
-            throw new IllegalArgumentException();
-        }
-
+        this.consoleResolution = validateResolution(consoleResolution);
+        this.bufferedImage = ImageIO.read(path);
+        validateImageBounds();
         this.convertImage();
+    }
+
+    private int validateResolution(int resolution) {
+        if (resolution >= LOWER_BOUND && resolution <= UPPER_BOUND) {
+            return resolution;
+        }
+        return DEFAULT_VALUE;
+    }
+
+    private void validateImageBounds() {
+        if (bufferedImage == null) {
+            throw new IllegalArgumentException("Can't load image!");
+        }
+        else if (consoleResolution > bufferedImage.getWidth()
+                || consoleResolution > bufferedImage.getHeight()) {
+            throw new IllegalArgumentException("Resolution is too big!");
+        }
     }
 
     private void convertImage() {

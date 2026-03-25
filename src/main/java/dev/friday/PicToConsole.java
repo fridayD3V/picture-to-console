@@ -8,29 +8,29 @@ import java.nio.file.NoSuchFileException;
 import java.net.URI;
 
 public class PicToConsole {
-    private final int consoleResolution;
+    private final int consoleWidth;
     private final BufferedImage bufferedImage;
-    private String imageString;
+    private final String imageString;
 
     private static final int LOWER_BOUND = 10;
     private static final int UPPER_BOUND = 1000;
     private static final int DEFAULT_VALUE = 50;
 
-    PicToConsole(int consoleResolution, String url) throws IOException {
-        this.consoleResolution = validateResolution(consoleResolution);
+    PicToConsole(int consoleWidth, String url) throws IOException {
+        this.consoleWidth = validateResolution(consoleWidth);
         this.bufferedImage = ImageIO.read(URI.create(url).toURL());
         validateImageBounds();
-        this.convertImage();
+        this.imageString = this.renderImageToString();
     }
 
-    PicToConsole(int consoleResolution, File path) throws IOException {
+    PicToConsole(int consoleWidth, File path) throws IOException {
         if (!path.exists() || !path.isFile())
             throw new NoSuchFileException(path.toString());
 
-        this.consoleResolution = validateResolution(consoleResolution);
+        this.consoleWidth = validateResolution(consoleWidth);
         this.bufferedImage = ImageIO.read(path);
         validateImageBounds();
-        this.convertImage();
+        this.imageString = this.renderImageToString();
     }
 
     private int validateResolution(int resolution) {
@@ -44,54 +44,58 @@ public class PicToConsole {
         if (bufferedImage == null) {
             throw new IllegalArgumentException("Can't load image!");
         }
-        else if (consoleResolution > bufferedImage.getWidth()
-                || consoleResolution > bufferedImage.getHeight()) {
+        else if (consoleWidth > bufferedImage.getWidth()
+                || consoleWidth > bufferedImage.getHeight()) {
             throw new IllegalArgumentException("Resolution is too big!");
         }
     }
 
-    private void convertImage() {
-        int widthOfOriginalImage = bufferedImage.getWidth();
-        int heightOfOriginalImage = bufferedImage.getHeight();
-
-        int widthOfConsolePixel = widthOfOriginalImage / consoleResolution;
-        // Because height of "█" == 2*width
-        int heightOfConsolePixel = heightOfOriginalImage / (consoleResolution / 2);
-
+    private String renderImageToString() {
         StringBuilder imageStringBuilder = new StringBuilder();
 
-        long r, g, b;
-        int pixelCount;
+        int widthOfOriginalImage = this.bufferedImage.getWidth();
+        int heightOfOriginalImage = this.bufferedImage.getHeight();
 
-        for (int consoleY = 0; consoleY < consoleResolution /2; consoleY++) {
-            for (int consoleX = 0; consoleX < consoleResolution; consoleX++) {
-                r = 0; g = 0; b = 0;
-                pixelCount = 0;
+        int widthOfConsolePixel = widthOfOriginalImage / this.consoleWidth;
+        // Because height of "█" == 2*width
+        int heightOfConsolePixel = heightOfOriginalImage / (this.consoleWidth / 2);
 
-                for (int pixelY = 0; pixelY < heightOfConsolePixel; pixelY++) {
-                    for (int pixelX = 0; pixelX < widthOfConsolePixel; pixelX++) {
-                        int currentX = consoleX*widthOfConsolePixel+pixelX;
-                        int currentY = consoleY*heightOfConsolePixel+pixelY;
+        for (int consoleY = 0; consoleY < this.consoleWidth /2; consoleY++) {
+            for (int consoleX = 0; consoleX < this.consoleWidth; consoleX++) {
 
-                        int rgb = bufferedImage.getRGB(currentX, currentY);
+                long[] avgColor = getAverageBlockColor(consoleX, consoleY, widthOfConsolePixel, heightOfConsolePixel);
 
-                        r += (rgb >> 16) & 0xFF;
-                        g += (rgb >> 8) & 0xFF;
-                        b += rgb & 0xFF;
-
-                        pixelCount++;
-                    }
-                }
-
-                r /= pixelCount; g /= pixelCount; b /= pixelCount;
-
-                imageStringBuilder.append(String.format("\u001b[38;2;%d;%d;%dm", r, g, b)).append("█");
+                imageStringBuilder.append(String.format("\u001b[38;2;%d;%d;%dm", avgColor[0], avgColor[1], avgColor[2])).append("█");
             }
             imageStringBuilder.append("\n");
         }
         imageStringBuilder.append("\u001b[0m"); // Returns the default color to console
 
-        this.imageString = imageStringBuilder.toString();
+       return imageStringBuilder.toString();
+    }
+
+    private long[] getAverageBlockColor(int consoleX, int consoleY, int widthOfConsolePixel, int heightOfConsolePixel) {
+        long r = 0L, g = 0L, b = 0L;
+        int pixelCount = 0;
+
+        for (int pixelY = 0; pixelY < heightOfConsolePixel; pixelY++) {
+            for (int pixelX = 0; pixelX < widthOfConsolePixel; pixelX++) {
+                int currentX = consoleX*widthOfConsolePixel+pixelX;
+                int currentY = consoleY*heightOfConsolePixel+pixelY;
+
+                int rgb = this.bufferedImage.getRGB(currentX, currentY);
+
+                r += (rgb >> 16) & 0xFF;
+                g += (rgb >> 8) & 0xFF;
+                b += rgb & 0xFF;
+
+                pixelCount++;
+            }
+        }
+
+        r /= pixelCount; g /= pixelCount; b /= pixelCount;
+
+        return new long[]{r, g, b};
     }
 
     public String getImageString() {

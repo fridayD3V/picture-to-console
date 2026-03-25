@@ -2,11 +2,10 @@ package dev.friday;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.NoSuchFileException;
+import java.net.URI;
 
 public class PicToConsole {
     private final int consoleResolution;
@@ -56,7 +55,8 @@ public class PicToConsole {
         int heightOfOriginalImage = bufferedImage.getHeight();
 
         int widthOfConsolePixel = widthOfOriginalImage / consoleResolution;
-        int heightOfConsolePixel = heightOfOriginalImage / (consoleResolution / 2);  // Because height of "█" == 2*width
+        // Because height of "█" == 2*width
+        int heightOfConsolePixel = heightOfOriginalImage / (consoleResolution / 2);
 
         StringBuilder imageStringBuilder = new StringBuilder();
 
@@ -70,9 +70,14 @@ public class PicToConsole {
 
                 for (int pixelY = 0; pixelY < heightOfConsolePixel; pixelY++) {
                     for (int pixelX = 0; pixelX < widthOfConsolePixel; pixelX++) {
-                        Color tempColor = new Color(bufferedImage.getRGB(consoleX*widthOfConsolePixel+pixelX, consoleY*heightOfConsolePixel+pixelY));
+                        int currentX = consoleX*widthOfConsolePixel+pixelX;
+                        int currentY = consoleY*heightOfConsolePixel+pixelY;
 
-                        r += tempColor.getRed(); g += tempColor.getGreen(); b += tempColor.getBlue();
+                        int rgb = bufferedImage.getRGB(currentX, currentY);
+
+                        r += (rgb >> 16) & 0xFF;
+                        g += (rgb >> 8) & 0xFF;
+                        b += rgb & 0xFF;
 
                         pixelCount++;
                     }

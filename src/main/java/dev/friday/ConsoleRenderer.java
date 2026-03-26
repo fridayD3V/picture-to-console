@@ -9,6 +9,10 @@ public class ConsoleRenderer {
     private static final int UPPER_BOUND = 1000;
     private static final int DEFAULT_VALUE = 50;
 
+    ConsoleRenderer() {
+        this.consoleWidth = DEFAULT_VALUE;
+    }
+
     ConsoleRenderer(int consoleWidth) {
         this.consoleWidth = validateResolution(consoleWidth);
     }

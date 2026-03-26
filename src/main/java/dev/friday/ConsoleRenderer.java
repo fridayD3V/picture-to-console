@@ -14,14 +14,9 @@ public class ConsoleRenderer {
     }
 
     ConsoleRenderer(int consoleWidth) {
-        this.consoleWidth = validateResolution(consoleWidth);
-    }
-
-    private int validateResolution(int resolution) {
-        if (resolution >= LOWER_BOUND && resolution <= UPPER_BOUND) {
-            return resolution;
-        }
-        return DEFAULT_VALUE;
+        if (consoleWidth >= LOWER_BOUND && consoleWidth <= UPPER_BOUND)
+            this.consoleWidth = consoleWidth;
+        else this.consoleWidth = DEFAULT_VALUE;
     }
 
     private void validateImageBounds(BufferedImage bufferedImage) {

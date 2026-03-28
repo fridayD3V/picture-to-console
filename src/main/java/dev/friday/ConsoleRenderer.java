@@ -16,13 +16,14 @@ public class ConsoleRenderer {
     ConsoleRenderer(int consoleWidth) {
         if (consoleWidth >= LOWER_BOUND && consoleWidth <= UPPER_BOUND)
             this.consoleWidth = consoleWidth;
-        else this.consoleWidth = DEFAULT_VALUE;
+        else {
+            System.out.println("Entered width is too big! Setting default value...");
+            this.consoleWidth = DEFAULT_VALUE;
+        }
     }
 
     private void validateImageBounds(BufferedImage bufferedImage) {
-        if (bufferedImage == null)
-            throw new IllegalArgumentException("Can't load image!");
-        else if (this.consoleWidth > bufferedImage.getWidth()
+        if (this.consoleWidth > bufferedImage.getWidth()
                 || this.consoleWidth > bufferedImage.getHeight()) {
             throw new IllegalArgumentException("Resolution is too big!");
         }
